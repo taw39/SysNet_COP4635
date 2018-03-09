@@ -2,17 +2,14 @@ LIB	=	./lib
 CFLAGS	=	-g -Wall
 CC	=	gcc
 
-clientObjects	=	client.o $(LIB)/clientLib.o
-serverObjects	=	server.o $(LIB)/serverLib.o
+clientObjects	=	httpClient.o $(LIB)/clientLib.o
+serverObjects	=	httpServer.o $(LIB)/serverLib.o
 
-httpClient	:	$(clientObjects)
-	$(CC) -o httpClient $(clientObjects)
+serverClient	:	$(clientObjects) $(serverObjects)
+	$(CC) -o httpClient $(clientObjects); $(CC) -o httpServer $(serverObjects)
 
-httpServer	:	$(serverObjects)
-	$(CC) -o httpServer $(serverObjects)
-
-client.o	:	httpClient.c $(LIB)/clientLib.h
-server.o	:	httpServer.c $(LIB)/serverLib.h
+httpClient.o	:	httpClient.c
+httpServer.o	:	httpServer.c
 $(LIB)/clientLib.o	:	$(LIB)/clientLib.c $(LIB)/clientLib.h
 $(LIB)/serverLib.o	:	$(LIB)/serverLib.c $(LIB)/serverLib.h
 

@@ -1,92 +1,60 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-//
-// #include "./lib/serverLib.h"
-// /**
-//  * Requests the user for hame of the http server + name of a file that resides
-//  * on server. Sends HTTP/1.1 request to the server ofr hte file. This will
-//  * display all responses received from the httpServer. Connection will be
-//  * persistent. If the server has stopped working, this will be indicated.
-//  *
-//  * @author: Tyler Webb
-//  * @date:   2018-03-09
-//  * @info:   COP4635 - Project 1
-//  */
-//
-// int main(int argc,char **argv)
-// {
-//
-//     return 0;
-// }
-
-
-
-
-
-
-
-
-
-
-
-/****************** CLIENT CODE ****************/
-
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-int main(){
-  int       clientSocket           ;
-  char      buffer[1024]           ;
-  struct    sockaddr_in serverAddr ;
-  socklen_t addr_size              ;
+#define MAX_REQUEST_SIZE 2048
+/**
+ * Requests the user for hame of the http server + name of a file that resides
+ * on server. Sends HTTP/1.1 request to the server ofr hte file. This will
+ * display all responses received from the httpServer. Connection will be
+ * persistent. If the server has stopped working, this will be indicated.
+ *
+ * @author: Alexander Oldaker
+ * @author: Tyler Webb
+ * @date:   2018-03-09
+ * @info:   COP4635 - Project 1
+ */
 
-  /**
-   * Create the socket. The three arguments are:
-   * 1) Internet domain
-   * 2) Stream socket
-   * 3) Default protocol (TCP in this case)
-   */
-  clientSocket = socket(PF_INET, SOCK_STREAM, 0);
+int main (int argc, char **argv){
+    char *addressFull = malloc(strlen(argv[1]) + 1);
+    addressFull = argv[1];
 
-  /**
-   * Configure settings of the server address struct
-   * Address family = Internet
-   */
-  serverAddr.sin_family = AF_INET;
+    char *address = malloc((strstr(addressFull,":")) - addressFull + 1);
+    address = strtok(addressFull,":");
 
-  /**
-   * Set port number, using htons function to use proper byte order
-   */
-  serverAddr.sin_port = htons(7891);
+    int port;
+    addressFull = strtok(NULL,":");
+    port = atoi(addressFull);
 
-  /**
-   * Set IP address to localhost
-   */
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    char *filePath = malloc(strlen(argv[2]) + 1);
+    filePath = argv[2];
 
-  /**
-   * Set all bits of the padding field to 0
-   */
-  memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+    char *request = malloc(sizeof(char)*MAX_REQUEST_SIZE);
+    snprintf(request,sizeof(char)*MAX_REQUEST_SIZE,"GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n",filePath,address,port);
 
-  /**
-   * Connect the socket to the server using the address struct
-   */
-  addr_size = sizeof serverAddr;
-  connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
+    int client_socket;
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-  /**
-   * Read the message from the server into the buffer
-   */
-  recv(clientSocket, buffer, 1024, 0);
+    //connect to an address
+    struct sockaddr_in remote_address;
+    remote_address.sin_family = AF_INET;
+    remote_address.sin_port = htons(port);
+    inet_aton(address, &remote_address.sin_addr);
 
-  /**
-   * Print the received message
-   */
-  printf("Data received: %s",buffer);
+    connect(client_socket, (struct sockaddr *) &remote_address, sizeof(remote_address));
 
-  return 0;
+    char response[4096];
+
+    send(client_socket, request, sizeof(request), 0);
+    recv(client_socket, &response, sizeof(response), 0);
+
+    printf("Response from the server: %s\n", response);
+
+    close(client_socket);
+    return 0;
 }
