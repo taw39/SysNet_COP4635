@@ -24,6 +24,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include <unistd.h> // for read()
 
 int main(){
   int welcomeSocket, newSocket;
@@ -59,9 +62,35 @@ int main(){
   addr_size = sizeof serverStorage;
   newSocket = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
 
+  // Parse out the recieved http response. 
+  // read() returns number of bytes read while input contents of newSocket into rString for upto 4096 byes
+  char rString[4096];
+  int n = read(newSocket, rString, 4096);
+
+  // DEBUG: prints the recieved message and size in bytes
+  printf("Number of Bytes read: %d\nRecieved Request: %s\n", n, rString);
+
+  // parse the file requested.
+  char *fileName = (char *)malloc(sizeof(char) * 1024);
+  char const a[2] = " ";
+  strcpy(fileName, strtok(rString, a));
+  strcpy(fileName, strtok(NULL, a));
+  fileName += 1;  //this gets rid of the '\' in the front of the parsed file name.
+
+  // DEBUG: prints the fileName to be returned
+  printf("Requested File: %s\n", fileName);
+
+  // open the file requested
+  FILE *fp = fopen(fileName, "r");
+  if(fp == NULL) {
+      perror("Error opening file");
+      return(-1);
+   }
+  fgets(buffer, 1024, fp);  // put the content of the requested file into the buffer
+
   /*---- Send message to the socket of the incoming connection ----*/
-  strcpy(buffer,"Hello World\n");
-  send(newSocket,buffer,13,0);
+  //strcpy(buffer,"Hello World\n");
+  send(newSocket,buffer,strlen(buffer),0);  // changed it so that it sends up to the length of buffer string.
 
   return 0;
 }

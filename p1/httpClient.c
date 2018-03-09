@@ -49,9 +49,12 @@ int main (int argc, char **argv){
     connect(client_socket, (struct sockaddr *) &remote_address, sizeof(remote_address));
 
     char response[4096];
-
-    send(client_socket, request, sizeof(request), 0);
-    recv(client_socket, &response, sizeof(response), 0);
+    
+    // DEBUG: prints the contents and size of request in bytes
+    printf("Sent Request: %s\nLength of request %d\n", request, strlen(request));
+    
+    send(client_socket, request, strlen(request), 0);       // originally sizeof(request) was only return 8, so only 8 bytes were sent
+    recv(client_socket, &response, sizeof(response), 0);    // Not recieving all info into response 
 
     printf("Response from the server: %s\n", response);
 
