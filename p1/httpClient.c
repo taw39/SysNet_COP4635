@@ -54,7 +54,7 @@ int main (int argc, char **argv){
     printf("Sent Request: %s\nLength of request %d\n", request, strlen(request));
     
     send(client_socket, request, strlen(request), 0);       // originally sizeof(request) was only return 8, so only 8 bytes were sent
-    recv(client_socket, &response, sizeof(response), 0);    // Not recieving all info into response 
+    recv(client_socket, &response, sizeof(response), 0);   
 
     printf("Response from the server: %s\n", response);
 
