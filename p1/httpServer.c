@@ -1,25 +1,5 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-//
-// #include "./lib/serverLib.h"
-// /**
-//  * While running sends file to request from httpClient / browser if it is a
-//  * valid request. Otherwise will return an error message for displaying.
-//  *
-//  * @author: Tyler Webb
-//  * @date:   2018-03-09
-//  * @info:   COP4635 - Project 1
-//  */
-//
-// int main(int argc,char **argv)
-// {
-//
-//     return 0;
-// }
-
-/****************** SERVER CODE ****************/
-
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -27,70 +7,85 @@
 #include <stdlib.h>
 
 #include <unistd.h> // for read()
+#include <fcntl.h>
 
-int main(){
-  int welcomeSocket, newSocket;
-  char buffer[1024];
-  struct sockaddr_in serverAddr;
-  struct sockaddr_storage serverStorage;
-  socklen_t addr_size;
+#define PORT       7891
+#define MAX_LEN    4096
+#define HEADER_LEN 240
 
-  /*---- Create the socket. The three arguments are: ----*/
-  /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
-  welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
+// https://stackoverflow.com/questions/28631767/sending-images-over-http-to-browser-in-c
+void response(int connSocket, char *fileName)
+{
+    struct stat filestat;
+    char headerBuffer[HEADER_LEN];
+    char fileBuffer[MAX_LEN];
+    char filesize[7];
+    FILE *fp;
+    int fd;
 
-  /*---- Configure settings of the server address struct ----*/
-  /* Address family = Internet */
-  serverAddr.sin_family = AF_INET;
-  /* Set port number, using htons function to use proper byte order */
-  serverAddr.sin_port = htons(7891);
-  /* Set IP address to localhost */
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  /* Set all bits of the padding field to 0 */
-  memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+    if((fd = open(fileName, O_RDONLY)) < -1 || (fstat(fd,&filestat)<0))
+        printf("Error in measuring the size of hte file");
 
-  /*---- Bind the address struct to the socket ----*/
-  bind(welcomeSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+    sprintf(filesize,"%zd",filestat.st_size);
 
-  /*---- Listen on the socket, with 5 max connection requests queued ----*/
-  if(listen(welcomeSocket,5)==0)
-    printf("Listening\n");
-  else
-    printf("Error\n");
+    fp = fopen(fileName,"r");
 
-  /*---- Accept call creates a new socket for the incoming connection ----*/
-  addr_size = sizeof serverStorage;
-  newSocket = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
+    if(fp == NULL)
+    {
+        // Measured 404.html size beforehand
+        strcpy(headerBuffer,"HTTP/1.1 404 Not Found\r\nContent-Size: 203\r\n");
+        fp = fopen("404.html","r");
+    }
 
-  // Parse out the recieved http response. 
-  // read() returns number of bytes read while input contents of newSocket into rString for upto 4096 byes
-  char rString[4096];
-  int n = read(newSocket, rString, 4096);
+    else if(fp != NULL)
+    {
+        strcpy(headerBuffer,"HTTP/1.1 200 OK\r\nContent-Length: ");
+        strcat(headerBuffer,filesize);
+        strcat(headerBuffer,"\r\n");
+    }
 
-  // DEBUG: prints the recieved message and size in bytes
-  printf("Number of Bytes read: %d\nRecieved Request: %s\n", n, rString);
+    strcat(headerBuffer,"Connection: keep-alive\r\n\r\n");
+    write(connSocket,headerBuffer,strlen(headerBuffer));
 
-  // parse the file requested.
-  char *fileName = (char *)malloc(sizeof(char) * 1024);
-  char const a[2] = " ";
-  strcpy(fileName, strtok(rString, a));
-  strcpy(fileName, strtok(NULL, a));
-  fileName += 1;  //this gets rid of the '\' in the front of the parsed file name.
+    fread(fileBuffer,sizeof(char),filestat.st_size,fp);
+    fclose(fp);
+    write(connSocket,fileBuffer,filestat.st_size);
+    close(connSocket);
+}
 
-  // DEBUG: prints the fileName to be returned
-  printf("Requested File: %s\n", fileName);
+int main()
+{
+    int welcomeSocket, newSocket          ;
+    struct sockaddr_in serverAddr         ;
+    struct sockaddr_storage serverStorage ;
+    socklen_t addr_size                    ;
 
-  // open the file requested
-  FILE *fp = fopen(fileName, "r");
-  if(fp == NULL) {
-      perror("Error opening file");
-      return(-1);
-   }
-  fgets(buffer, 1024, fp);  // put the content of the requested file into the buffer
+    welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
 
-  /*---- Send message to the socket of the incoming connection ----*/
-  //strcpy(buffer,"Hello World\n");
-  send(newSocket,buffer,strlen(buffer),0);  // changed it so that it sends up to the length of buffer string.
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    memset(serverAddr.sin_zero,'\0',sizeof(serverAddr.sin_zero));
 
-  return 0;
+    bind(welcomeSocket,(struct sockaddr *) &serverAddr, sizeof(serverAddr));
+
+    if(listen(welcomeSocket,5)==0)
+        printf("Listening\n");
+    else
+        printf("Error\n");
+
+    addr_size = sizeof(serverStorage);
+    newSocket = accept(welcomeSocket, (struct sockaddr *)&serverStorage,&addr_size);
+
+    char rString[MAX_LEN];
+    int n = read(newSocket, rString, MAX_LEN);
+
+    char *fileName = (char*)malloc(sizeof(char)*MAX_LEN);
+    strcpy(fileName,strtok(rString," "));
+    strcpy(fileName,strtok(NULL   ," "));
+    fileName++; // Get rid of first /
+
+    response(newSocket,fileName);
+
+    return 0;
 }
