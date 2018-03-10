@@ -9,7 +9,7 @@
 #include <unistd.h> // for read()
 #include <fcntl.h>
 
-#define PORT       7891
+#define PORT       60001    //has to be a valid port number (60001 - 60099)
 #define MAX_LEN    4096
 #define HEADER_LEN 240
 
@@ -58,7 +58,7 @@ int main()
     int welcomeSocket, newSocket          ;
     struct sockaddr_in serverAddr         ;
     struct sockaddr_storage serverStorage ;
-    socklen_t addr_size                    ;
+    socklen_t addr_size                   ;
 
     welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -70,22 +70,24 @@ int main()
     bind(welcomeSocket,(struct sockaddr *) &serverAddr, sizeof(serverAddr));
 
     if(listen(welcomeSocket,5)==0)
-        printf("Listening\n");
+        printf("Server ready. Listening and waiting for client request\n");
     else
         printf("Error\n");
 
     addr_size = sizeof(serverStorage);
-    newSocket = accept(welcomeSocket, (struct sockaddr *)&serverStorage,&addr_size);
+    
+    while(1){
+        newSocket = accept(welcomeSocket, (struct sockaddr *)&serverStorage,&addr_size);
 
-    char rString[MAX_LEN];
-    int n = read(newSocket, rString, MAX_LEN);
+        char rString[MAX_LEN];
+        read(newSocket, rString, MAX_LEN);
 
-    char *fileName = (char*)malloc(sizeof(char)*MAX_LEN);
-    strcpy(fileName,strtok(rString," "));
-    strcpy(fileName,strtok(NULL   ," "));
-    fileName++; // Get rid of first /
+        char *fileName = (char*)malloc(sizeof(char)*MAX_LEN);
+        strcpy(fileName,strtok(rString," "));
+        strcpy(fileName,strtok(NULL   ," "));
+        fileName++; // Get rid of first '/'
 
-    response(newSocket,fileName);
-
+        response(newSocket,fileName);
+    }
     return 0;
 }
