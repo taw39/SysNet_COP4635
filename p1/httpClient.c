@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_REQUEST_SIZE 2048
+#define CONV_LENGTH 4096
 /**
  * Requests the user for hame of the http server + name of a file that resides
  * on server. Sends HTTP/1.1 request to the server ofr hte file. This will
@@ -34,8 +34,8 @@ int main (int argc, char **argv){
     char *filePath = malloc(strlen(argv[2]) + 1);
     filePath = argv[2];
 
-    char *request = malloc(sizeof(char)*MAX_REQUEST_SIZE);
-    snprintf(request,sizeof(char)*MAX_REQUEST_SIZE,"GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n",filePath,address,port);
+    char *request = malloc(sizeof(char)*CONV_LENGTH);
+    snprintf(request,sizeof(char)*CONV_LENGTH,"GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n",filePath,address,port);
 
     int client_socket;
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,13 +48,13 @@ int main (int argc, char **argv){
 
     connect(client_socket, (struct sockaddr *) &remote_address, sizeof(remote_address));
 
-    char response[4096];
-    
+    char response[CONV_LENGTH];
+
     // DEBUG: prints the contents and size of request in bytes
-    printf("Sent Request: %s\nLength of request %d\n", request, strlen(request));
-    
+    printf("Sent Request: %s\nLength of request %d\n", request, (int)strlen(request));
+
     send(client_socket, request, strlen(request), 0);       // originally sizeof(request) was only return 8, so only 8 bytes were sent
-    recv(client_socket, &response, sizeof(response), 0);   
+    recv(client_socket, &response, sizeof(response), 0);
 
     printf("Response from the server: %s\n", response);
 
