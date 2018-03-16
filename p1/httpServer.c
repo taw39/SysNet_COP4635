@@ -14,19 +14,24 @@
 #define HEADER_LEN 240
 
 // https://stackoverflow.com/questions/28631767/sending-images-over-http-to-browser-in-c
+
+// https://stackoverflow.com/questions/25411046/send-image-through-c-socket
 void response(int connSocket, char *fileName)
 {
     struct stat filestat;
     char headerBuffer[HEADER_LEN];
     char fileBuffer[MAX_LEN];
-    char filesize[7];
+    //char filesize[7];
     FILE *fp;
     int fd;
 
-    if((fd = open(fileName, O_RDONLY)) < -1 || (fstat(fd,&filestat)<0))
-        printf("Error in measuring the size of hte file");
+    //the content type. i.e. html or jpg
+    char *type = malloc(sizeof(char) * 100); 
 
-    sprintf(filesize,"%zd",filestat.st_size);
+    if((fd = open(fileName, O_RDONLY)) < -1 || (fstat(fd,&filestat)<0))
+        printf("Error in measuring the size of the file");
+
+    //sprintf(filesize,"%zd",filestat.st_size);
 
     fp = fopen(fileName,"r");
 
@@ -39,17 +44,44 @@ void response(int connSocket, char *fileName)
 
     else if(fp != NULL)
     {
-        strcpy(headerBuffer,"HTTP/1.1 200 OK\r\nContent-Length: ");
-        strcat(headerBuffer,filesize);
-        strcat(headerBuffer,"\r\n");
+        // determines the content type but the browser should be able to determine that automatically.
+        
+        //determine file type
+        if((strstr(fileName, ".html")) != NULL){
+            strcpy(type, "text/html");
+        }else if((strstr(fileName, ".jpg")) != NULL){
+            strcpy(type, "image/jpg");
+        }
+        
+        stat(fileName, &filestat);
+        //strcpy(headerBuffer,"HTTP/1.1 200 OK\r\nContent-Length: ");
+        //strcat(headerBuffer,filesize);
+        //strcat(headerBuffer,"\r\n");
+        sprintf(headerBuffer, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lld\r\n", type, filestat.st_size);
+        // contenet type?
+
     }
 
     strcat(headerBuffer,"Connection: keep-alive\r\n\r\n");
-    write(connSocket,headerBuffer,strlen(headerBuffer));
-
-    fread(fileBuffer,sizeof(char),filestat.st_size,fp);
+    write(connSocket,headerBuffer,strlen(headerBuffer));    
+    fread(fileBuffer,sizeof(char),filestat.st_size, fp); // check if this is getting all of the image?
     fclose(fp);
-    write(connSocket,fileBuffer,filestat.st_size);
+    
+    //write(connSocket,fileBuffer,filestat.st_size);     // MUST BE THE PROBLEM
+
+    // gets the whole buffer sent
+    char *msg = fileBuffer;
+    int msglen = strlen(msg);
+    while(msglen > 0){
+        int len = write(connSocket, msg, msglen);
+        if(len <=0){
+            // do nothing -- will exit afterwards
+        }else{
+            msg += len;
+            msglen -= len;
+        }
+    }
+    
     close(connSocket);
 }
 
