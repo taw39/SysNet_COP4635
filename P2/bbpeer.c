@@ -155,17 +155,16 @@ void *logicRing(void *vargp){
     //exit on some condition eventually
 }
 
-//connecting and recieving info should be handled by a thread started here.
+// Sends a "connect" message to the server/peer it 
+//  which tells that target that this peer wants to be added to the ring.
 void connectServer(char* address, int port, char *response){
     printf("Connecting to server...\n");
     
-
     //connect to server on the port given in host port.
     //create socket, bind it, and send/recieve from it
 
-    
-
-    /* start with creating/binding the remote address of the server */
+    /* start with creating to the remote address of the server */
+    // copied over from project 1 for the most part
     struct sockaddr_in remote_address;
     remote_address.sin_family = AF_INET;
     remote_address.sin_port = htons(port);
@@ -245,9 +244,10 @@ int main (int argc, char **argv){
     /* Holds the response from the server/peer we connect to */
     /* Will contain the next neighbor and has token on start */
     char *response;
-    response = malloc(sizeof(char)*CONV_LENGTH);
+    response = malloc(sizeof(char) * CONV_LENGTH);
     strcpy(response, "\0");
 
+    /* Connect to the server and save response back to response memory location */
     connectServer(connectAddress, hostPort, response);
 
     // start a new startConnection thread and feed in the hostPort
@@ -256,6 +256,8 @@ int main (int argc, char **argv){
     // have a join for the above pthread. if it ends without exiting,
     // print the menu and assume the connection was made
 
+    // thread ids for the twp threads we will need to use at the same time
+    // pretty sure these are not meant to be assigned to by us
     int tid_1;
     int tid_2;
 
