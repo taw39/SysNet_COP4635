@@ -9,6 +9,8 @@
 #include <unistd.h> // for read()
 #include <fcntl.h>
 
+#define MAX_LEN 100000
+
 /*
  * @author: Alexander Oldaker
  * @author: Tyler Webb
@@ -42,7 +44,7 @@ int main(int argc, char **argv)
         printf("Error\n");
 
     addr_size = sizeof(serverStorage);
-    
+
     // server while remain open until a force quit (ctrl + c)
 
     while(1){
@@ -60,10 +62,10 @@ int main(int argc, char **argv)
             ring, give that peer the token first.
         */
 
-       
+
     }
 
-    //close done the program when all peers server expected have sent 
+    //close done the program when all peers server expected have sent
     //connection messages and all have been informed of their neighbor.
     return 0;
 }
