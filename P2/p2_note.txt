@@ -1,0 +1,76 @@
+Project 2 Notes
+
+Implementing a simple bulletin board using UDP sockets for inter-process communication.
+
+Bulletin Board
+--------------
+
+	- Based on a shared file that contains the list of messages. 
+	- This file is accessible to hosts using the SSH server's Network File System for file sharing.
+	- Access to the file is controlled by a token of a logical ring that the hosts running the bulletin board must join. 
+	- Each host in the ring has access to the bulletin board only when it is in possession of the token.
+	- Otherwise, it must wait to receive the token from its sending neighbor in the token ring.
+
+ 
+Access Protocol
+---------------
+
+	- When a host receives the token, it can access the bulletin board to read messages or to append new messages to the shared file of the bulletin board. 
+	- When the host has completed reading or modifying the shared file, it passes the token to its neighbor in the ring.
+	- If the host has nothing to read or write, it passes the token on immediately to the receiving neighbor in the token ring. 
+	
+Bulletin Board Menu
+-------------------
+
+	1) write
+		- Appends a new message to the end of the message board
+	2) read #
+		- Read a particular message from the message board using a message sequence number. (#) is the sequence number of the message on the board
+	3) list
+		- Displays the range of valid sequence numbers of messages posted to the board
+	4) exit
+		- Closes the message board. Exit requires that the user leaves the logical token ring.
+	
+Bulletin Board Message Format
+-----------------------------
+
+	- The shared filed used by the bulletin board system contains a list of sequentially numbered messages starting at 1.
+	- Each message number must be unique, i.e. the sequence number assigned to a message is different for each message.
+	- The message consists of a header, a footer, and a body. 
+		- The header occupies the first line of the message
+		- The footer the last line
+		- Both follow a strict syntax described in the project description
+		- The message body is in free format and of any length except that the body cannot contain a valid header or footer message.
+		- You are not required to handle body messages with any valid footer or header in it.
+
+	Format
+	-----------
+	- Header	<message n=[number]>
+		- The XML tag on a single line to indicate th start of the message. Replace number with the actual number of the message.
+	
+	- Body		lines of text
+		- Multiple lines of text that may not start with the format of the header or footer
+		
+	- Footer 	</message>
+		- The XML tag on a single line to indicate the end of the message. 
+		
+Token Passing In Ring
+------------------------
+
+	- A host is only allowed to add to the bulletin board or read from it when it has the token to perform the write or read operation on the shared file.
+	- To avoid that a token is held by the host while the user enters a new bulletin board message on the keyboard, the host program needs to setup two separate threads.
+		- The main thread must handle token message passing among hosts. 
+		- The bulletin board editing thread must handle user data entry.
+		- NOTE: Only when the host has access to the token, it is permitted to write a user-entered message to the bulletin board shared file or read from the shared file.
+	- The goal is for users to be able to select a message they want to read or start writing a new message while the token continues to be received and passed through the peer. 
+	- Users should be able to select a message they want to read or start writing a new message while the token continues to be received and passed through the peer. 
+	
+Establishing, Joining, And Exiting From A Ring
+----------------------------------------------
+
+	- The ring is established at startup time but hosts may exit the token ring at any time. 
+	- When hosts exit the ring, the system must ensure no break in the flow of information within the token ring network occurs.
+	- The ring is established by a separate server program that communicates with the hosts to inform them about their neighbors.
+	- Each host in the network has a neighbor from whom it receives a token and a neighbor to whom it sends the token. 
+	- This mens that for token ring of N nodes there are N point-to-point communication paths forming the ring. In the ring, messages travel in only one direction around the ring and although tokens may get lost in physical token rings, you may assume that the token messages for this project will not get lost.
+	- At startuo, hosts contact the server toadvetise their presence with their host address and port number for communication. When the server has received annoucements from the expected number of hosts, it creates a logical ring and sends the hots in the network information about their neighbors.

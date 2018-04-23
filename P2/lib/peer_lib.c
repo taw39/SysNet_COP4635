@@ -13,6 +13,47 @@
 
 #include "peer_lib.h"
 
+void listFile(){
+	// list the whole file
+	char *buff = malloc(sizeof(char) * 1000); // <-- Get rid of this magic number later
+	
+	FILE *fp = fopen(file_path, "r");
+	fgets(buff, 1000, fp);
+
+	printf("Printing all messages...\n%s\n", buff);
+}
+
+void readFile(){
+	// diplaying a specific message
+	int num;
+	// asking for what message to search for
+	print("Please enter the sequence number of the message you would like to read: \n");
+	scanf("%d", &num);
+	
+	// holds the file contents. hoping 1000 chars is enough space
+	char *buff = malloc(sizeof(char) * 1000); // <-- Get rid of this magic number later
+	
+	FILE *fp = fopen(file_path, "r");
+	fgets(buff, 1000, fp);
+
+	// the string to look for in the buffer
+	char *targetMessage = malloc(sizeof(char) * 20);
+	sprintf(targetMessage, "<message n = %d>", num);
+
+	// we will delimit the buffer until we find the target message
+	char delim[10] = "</message>";	// <-- This will ensure we are only getting one message at a time.
+	char *token;
+	token = strtok(fp, delim);
+	
+	while( token != NULL){
+		if(strstr(fp, targetMessage)){
+			//found message. Print token.
+			printf("Message found!\nPrinting Message...\n%s\n", token);
+			break;
+		}
+	}
+}
+
 void writeBuffer() {
 	char *body_buffer = malloc(sizeof(char) * MAX_BUFFER);
 
@@ -48,9 +89,11 @@ void *userMenu() {
 				break;
 			case 'r':
 			case 'R':
+				readFile();
 				break;
 			case 'l':
 			case 'L':
+				listFile();
 				break;
 			case 'e':
 			case 'E':
@@ -60,6 +103,8 @@ void *userMenu() {
 				break;
 		}
 	} while(choice != 'e' || choice != 'E');
+
+	printf("Exiting user input thread\n");
 }
 
 /**
@@ -77,6 +122,7 @@ void *logicRing(void *vargp) {
 	// Loop here
 }
 
+/* Sends a connect message to the server (or established ring) and expects back the port number of its new neighbor */
 void connectServer(char *address, int port, char *response) {
 	fprintf(stderr,"Connecting to server...\n");
 

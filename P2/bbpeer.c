@@ -10,6 +10,8 @@ int main(int argc, char **argv) {
 	host_port = atoi(argv[3]);   // Port you wish to connect to
 	file_path = argv[4];         // Path to file
 
+	
+
 	// Holds response from server/peer we connect to
 	char *response = malloc(sizeof(char) * CONV_LENGTH);
 	strcpy(response,"\0");
@@ -32,6 +34,8 @@ int main(int argc, char **argv) {
 	// Join threads before ending program
 	// pthread_join(tid_1, NULl);
 	// pthread_join(tid_2, NULL);
+
+	pthread(&tid_2, NULL, userMenu, NULL);
 
 	return 0;
 }
