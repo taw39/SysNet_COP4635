@@ -52,10 +52,10 @@ int main(int argc, char **argv)
 
     //make an array of port nums, send back a diff port num to each one.
     int i = 0;
-    int newSocket[numHosts];          
+    int newSocket[numHosts];
     char portArray[numHosts];
 
-    
+
 
     while(1){
         newSocket[i] = accept(welcomeSocket, (struct sockaddr *)&serverStorage,&addr_size);
@@ -72,13 +72,13 @@ int main(int argc, char **argv)
             ring, give that peer the token first.
         */
        strtok(rString, ":");
-       portArray[n] = strtok(NULL, ":");
+       portArray[i] = strtok(NULL, ":");
        i++;
     }
     // should return to each peer the port number of their neighbor
     int k = 1;
-    for(i = 0; i < numHosts, i++){
-        
+    for(i = 0; i < numHosts; i++){
+
         write(newSocket[i], portArray[k], sizeof(portArray[k]));
         k++;
         if(k == numHosts)

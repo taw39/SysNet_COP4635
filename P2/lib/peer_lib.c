@@ -20,7 +20,7 @@ void exitProgram(){
 void listFile(){
 	// list the range of sequence numbers
 	printf("The valid range of sequence numbers is: 0 - %d\n", sequenceCount);
-	
+
 }
 
 void readFile(){
@@ -29,10 +29,10 @@ void readFile(){
 	// asking for what message to search for
 	print("Please enter the sequence number of the message you would like to read: \n");
 	scamf("%d", &num);
-	
+
 	// holds the file contents. hoping 1000 chars is enough space
 	char *buff = malloc(sizeof(char) * 1000); // <-- Get rid of this magic number later
-	
+
 	FILE *fp = fopen(file_path, "r");
 	fgets(buff, 1000, fp);
 
@@ -44,7 +44,7 @@ void readFile(){
 	char delim[10] = "</message>";	// <-- This will ensure we are only getting one message at a time.
 	char *token;
 	token = strtok(fp, delim);
-	
+
 	while( token != NULL){
 		if(strstr(fp, targetMessage)){
 			//found message. Print token.
@@ -137,7 +137,7 @@ void *logicRing(void *vargp) {
     if(listen(welcomeSocket,5)==0)
         printf("Peer ready. Listening for messages...\n");
     else
-        printf("Error: Server not listening\n");	
+        printf("Error: Server not listening\n");
 
 	while(1){
 		newSocket = accept(welcomeSocket, (struct sockaddr *)&serverStorage, &addr_size);
@@ -166,7 +166,7 @@ void *logicRing(void *vargp) {
 			// if token msg, get/set msg count, set hasToken to true (1) and write buffer.
 			hasToken = 1;
 			sequenceCount = atoi(strtok(NULL, ":"));
-			//call void function that writes buffer to file 
+			//call void function that writes buffer to file
 			writeBuff();
 			hasToken = 0;
 			//call void function that sends a msg to next neighbor
@@ -231,11 +231,11 @@ void connectServer(char *address, int port, char *response) {
 	else
 		fprintf(stdout, "Message recieved! Server port is: %s!\n", response);
 
-	//response should be 
+	//response should be
 	//	60001:0 or 60001:1
 	neighborPort = atoi(strtok(response, ":"));
 	hasToken = atoi(strtok(NULL, ":"));
-	// empty the response buffer just in case 
+	// empty the response buffer just in case
 	strcpy(response, "\0");
 
 	close(peer_socket);

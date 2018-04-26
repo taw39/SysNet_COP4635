@@ -17,6 +17,15 @@ int sequenceCount;
 int neighborPort;
 int hasToken = 0;
 
+void exitProgram();
+void listFile();
+void readFile();
+void writeBuffer();
+void printMenu();
+void *userMenu();
 void *logicRing(void *vargp);
+void sendTokenMsg();
+void writeBuff();
+void connectServer(char *address, int port, char *response);
 
 #endif
