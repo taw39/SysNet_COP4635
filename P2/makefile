@@ -2,17 +2,28 @@ LIB	=	./lib
 CFLAGS	=	-g -Wall -lpthread
 CC	=	gcc
 
-peerObjects	=	bbPeer.o peer_lib.o
-serverObjects	=	bbServer.o
+################################################################################
 
-bbPeer	:	$(peerObjects) $(serverObjects)
-	$(CC) -o bbPeer $(peerObjects); $(CC) -o bbServer $(serverObjects)
+peerObjects	=	bbpeer.o $(LIB)/peer_lib.o
 
-bbPeer.o	:	bbPeer.c $(LIB)/peer_lib.h
-peer_lib.o	:	$(LIB)/peer_lib.c $(LIB)/peer_lib.h
-bbServer.o	:	bbServer.c
+bbPeer	:	$(peerObjects)
+	$(CC) -o bbPeer $(peerObjects) $(CFLAGS)
+
+bbpeer.o	:	bbpeer.c $(LIB)/peer_lib.h
+$(LIB)/peer_lib.o	:	$(LIB)/peer_lib.c $(LIB)/peer_lib.h
+
+################################################################################
+
+serverObjects	=	bbserver.o
+
+bbserver.o	:	bbserver.c
+
+bbServer	:	$(serverObjects)
+	$(CC) -o bbServer $($serverObjects) $(CFLAGS)
+
+################################################################################
 
 .PHONY	:	clean
-clean	:
-	rm httpClient httpServer $(peerObjects) $(serverObjects)
 
+clean	:
+	rm bbPeer bbServer $(peerObjects) $(serverObjects)
