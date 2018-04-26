@@ -12,8 +12,10 @@ char *file_path;
 char *buffer;
 int peer_port;
 int host_port;
-int message_count;
 int debug = 0;
+int sequenceCount;
+int neighborPort;
+int hasToken = 0;
 
 void *logicRing(void *vargp);
 
