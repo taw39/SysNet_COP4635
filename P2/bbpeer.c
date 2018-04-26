@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "lib/peer_lib.h"
+#include <stdlib.h>
+#include <string.h>
+#include "peer_lib.h"
 #include <pthread.h>
 	// bbpeer localhost <portNum> <hostPort> <filenameBulletingBoard>
 int main(int argc, char **argv) {
@@ -24,14 +26,13 @@ int main(int argc, char **argv) {
 	pthread_t tid_1;
 	pthread_t tid_2;
 
-	// Start a new startConnection thread and feed in the hostPort
-	// pthread_create(&tid_1, NULL, startConnection, host_port);
+	// Start a new startConnection thread
 
-	// Have a join for the above pthread. If it ends without exiting
-	// print the menu and assume the connection was made
-	pthread(&tid_1, NULL, logicRing, neighborPort);
+	pthread_create(&tid_1, NULL, logicRing, NULL);
 
-	pthread(&tid_2, NULL, userMenu, NULL);
+	// Start a new user input thread
+	
+	pthread_create(&tid_2, NULL, userMenu, NULL);
 
 	pthread_join(tid_1, NULL);
 	pthread_join(tid_2, NULL);
